@@ -188,13 +188,14 @@ var Infinite = React.createClass({
     };
     if (props.useWindowAsScrollContainer) {
       utilities.subscribeToScrollListener = () => {
-        window.addEventListener('scroll', this.infiniteHandleScroll);
+        window.addEventListener('scroll', this.infiniteHandleWindowScroll);
       };
       utilities.unsubscribeFromScrollListener = () => {
-        window.removeEventListener('scroll', this.infiniteHandleScroll);
+        window.removeEventListener('scroll', this.infiniteHandleWindowScroll);
       };
       utilities.nodeScrollListener = () => {};
-      utilities.getScrollTop = () => window.pageYOffset;
+      utilities.lastPageYOffset = window.pageYOffset;
+      utilities.getScrollTop = () => utilities.lastPageYOffset;
       utilities.setScrollTop = (top) => {
         window.scroll(window.pageXOffset, top);
       };
@@ -324,6 +325,11 @@ var Infinite = React.createClass({
 
   componentWillUnmount() {
     this.utils.unsubscribeFromScrollListener();
+  },
+
+  infiniteHandleWindowScroll(e: SyntheticEvent) {
+    this.utils.lastPageYOffset = window.pageYOffset;
+    window.requestAnimationFrame(this.infiniteHandleScroll);
   },
 
   infiniteHandleScroll(e: SyntheticEvent) {

@@ -1,7 +1,467 @@
 (function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.Infinite = f()}})(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 (function (global){
-"use strict";function _objectWithoutProperties(e,t){var i={};for(var o in e)t.indexOf(o)>=0||Object.prototype.hasOwnProperty.call(e,o)&&(i[o]=e[o]);return i}var React=global.React||require("react");require("./utils/establish-polyfills");var scaleEnum=require("./utils/scaleEnum"),infiniteHelpers=require("./utils/infiniteHelpers"),_isFinite=require("lodash.isfinite"),preloadType=require("./utils/types").preloadType,checkProps=checkProps=require("./utils/checkProps"),Infinite=React.createClass({displayName:"Infinite",propTypes:{children:React.PropTypes.any,handleScroll:React.PropTypes.func,preloadBatchSize:preloadType,preloadAdditionalHeight:preloadType,elementHeight:React.PropTypes.oneOfType([React.PropTypes.number,React.PropTypes.arrayOf(React.PropTypes.number)]).isRequired,containerHeight:React.PropTypes.number,useWindowAsScrollContainer:React.PropTypes.bool,displayBottomUpwards:React.PropTypes.bool.isRequired,infiniteLoadBeginEdgeOffset:React.PropTypes.number,onInfiniteLoad:React.PropTypes.func,loadingSpinnerDelegate:React.PropTypes.node,isInfiniteLoading:React.PropTypes.bool,timeScrollStateLastsForAfterUserScrolls:React.PropTypes.number,className:React.PropTypes.string,styles:React.PropTypes.shape({scrollableStyle:React.PropTypes.object}).isRequired},statics:{containerHeightScaleFactor:function(e){if(!_isFinite(e))throw new Error("The scale factor must be a number.");return{type:scaleEnum.CONTAINER_HEIGHT_SCALE_FACTOR,amount:e}}},computedProps:{},utils:{},shouldAttachToBottom:!1,preservedScrollState:0,loadingSpinnerHeight:0,deprecationWarned:!1,scrollable:null,topSpacer:null,bottomSpacer:null,smoothScrollingWrapper:null,loadingSpinner:null,getDefaultProps:function(){return{handleScroll:function(){},useWindowAsScrollContainer:!1,onInfiniteLoad:function(){},loadingSpinnerDelegate:React.createElement("div",null),displayBottomUpwards:!1,isInfiniteLoading:!1,timeScrollStateLastsForAfterUserScrolls:150,className:"",styles:{}}},getInitialState:function(){var e=this.recomputeInternalStateFromProps(this.props);this.computedProps=e.computedProps,this.utils=e.utils,this.shouldAttachToBottom=this.props.displayBottomUpwards;var t=e.newState;return t.scrollTimeout=void 0,t.isScrolling=!1,t},generateComputedProps:function(e){var t=e.containerHeight,i=e.preloadBatchSize,o=e.preloadAdditionalHeight,n=_objectWithoutProperties(e,["containerHeight","preloadBatchSize","preloadAdditionalHeight"]),r={};t="number"==typeof t?t:0,r.containerHeight=e.useWindowAsScrollContainer?window.innerHeight:t,void 0!==n.infiniteLoadBeginBottomOffset&&(r.infiniteLoadBeginEdgeOffset=n.infiniteLoadBeginBottomOffset,this.deprecationWarned||(console.error("Warning: React Infinite's infiniteLoadBeginBottomOffset prop\n        has been deprecated as of 0.6.0. Please use infiniteLoadBeginEdgeOffset.\n        Because this is a rather descriptive name, a simple find and replace\n        should suffice."),this.deprecationWarned=!0));var s={type:scaleEnum.CONTAINER_HEIGHT_SCALE_FACTOR,amount:.5},l=i&&i.type?i:s;"number"==typeof i?r.preloadBatchSize=i:"object"==typeof l&&l.type===scaleEnum.CONTAINER_HEIGHT_SCALE_FACTOR?r.preloadBatchSize=r.containerHeight*l.amount:r.preloadBatchSize=0;var a={type:scaleEnum.CONTAINER_HEIGHT_SCALE_FACTOR,amount:1},c=o&&o.type?o:a;return"number"==typeof o?r.preloadAdditionalHeight=o:"object"==typeof c&&c.type===scaleEnum.CONTAINER_HEIGHT_SCALE_FACTOR?r.preloadAdditionalHeight=r.containerHeight*c.amount:r.preloadAdditionalHeight=0,Object.assign(n,r)},generateComputedUtilityFunctions:function(e){var t=this,i={};return i.getLoadingSpinnerHeight=function(){var e=0;return t.loadingSpinner&&(e=t.loadingSpinner.offsetHeight||0),e},e.useWindowAsScrollContainer?(i.subscribeToScrollListener=function(){window.addEventListener("scroll",t.infiniteHandleScroll)},i.unsubscribeFromScrollListener=function(){window.removeEventListener("scroll",t.infiniteHandleScroll)},i.nodeScrollListener=function(){},i.getScrollTop=function(){return window.pageYOffset},i.setScrollTop=function(e){window.scroll(window.pageXOffset,e)},i.scrollShouldBeIgnored=function(){return!1},i.buildScrollableStyle=function(){return{}}):(i.subscribeToScrollListener=function(){},i.unsubscribeFromScrollListener=function(){},i.nodeScrollListener=this.infiniteHandleScroll,i.getScrollTop=function(){return t.scrollable?t.scrollable.scrollTop:0},i.setScrollTop=function(e){t.scrollable&&(t.scrollable.scrollTop=e)},i.scrollShouldBeIgnored=function(e){return e.target!==t.scrollable},i.buildScrollableStyle=function(){return Object.assign({},{height:t.computedProps.containerHeight,overflowX:"hidden",overflowY:"scroll",WebkitOverflowScrolling:"touch"},t.computedProps.styles.scrollableStyle||{})}),i},recomputeInternalStateFromProps:function(e){checkProps(e);var t=this.generateComputedProps(e),i=this.generateComputedUtilityFunctions(e),o={};return o.numberOfChildren=React.Children.count(t.children),o.infiniteComputer=infiniteHelpers.createInfiniteComputer(t.elementHeight,t.children,t.displayBottomUpwards),void 0!==t.isInfiniteLoading&&(o.isInfiniteLoading=t.isInfiniteLoading),o.preloadBatchSize=t.preloadBatchSize,o.preloadAdditionalHeight=t.preloadAdditionalHeight,o=Object.assign(o,infiniteHelpers.recomputeApertureStateFromOptionsAndScrollTop(o,i.getScrollTop())),{computedProps:t,utils:i,newState:o}},componentWillReceiveProps:function(e){var t=this.recomputeInternalStateFromProps(e);this.computedProps=t.computedProps,this.utils=t.utils,this.setState(t.newState)},componentWillUpdate:function(){this.props.displayBottomUpwards&&(this.preservedScrollState=this.utils.getScrollTop()-this.loadingSpinnerHeight)},componentDidUpdate:function(e,t){if(this.loadingSpinnerHeight=this.utils.getLoadingSpinnerHeight(),this.props.displayBottomUpwards){var i=this.getLowestPossibleScrollTop();this.shouldAttachToBottom&&this.utils.getScrollTop()<i?this.utils.setScrollTop(i):e.isInfiniteLoading&&!this.props.isInfiniteLoading&&this.utils.setScrollTop(this.state.infiniteComputer.getTotalScrollableHeight()-t.infiniteComputer.getTotalScrollableHeight()+this.preservedScrollState)}var o=this.state.numberOfChildren!==t.numberOfChildren;if(o){var n=infiniteHelpers.recomputeApertureStateFromOptionsAndScrollTop(this.state,this.utils.getScrollTop());this.setState(n)}var r=o&&!this.hasAllVisibleItems()&&!this.state.isInfiniteLoading;r&&this.onInfiniteLoad()},componentDidMount:function(){if(this.utils.subscribeToScrollListener(),this.hasAllVisibleItems()||this.onInfiniteLoad(),this.props.displayBottomUpwards){var e=this.getLowestPossibleScrollTop();this.shouldAttachToBottom&&this.utils.getScrollTop()<e&&this.utils.setScrollTop(e)}},componentWillUnmount:function(){this.utils.unsubscribeFromScrollListener()},infiniteHandleScroll:function(e){this.utils.scrollShouldBeIgnored(e)||(this.computedProps.handleScroll(this.scrollable),this.handleScroll(this.utils.getScrollTop()))},manageScrollTimeouts:function(){this.state.scrollTimeout&&clearTimeout(this.state.scrollTimeout);var e=this,t=setTimeout(function(){e.setState({isScrolling:!1,scrollTimeout:void 0})},this.computedProps.timeScrollStateLastsForAfterUserScrolls);this.setState({isScrolling:!0,scrollTimeout:t})},getLowestPossibleScrollTop:function(){return this.state.infiniteComputer.getTotalScrollableHeight()-this.computedProps.containerHeight},hasAllVisibleItems:function(){return!(_isFinite(this.computedProps.infiniteLoadBeginEdgeOffset)&&this.state.infiniteComputer.getTotalScrollableHeight()<this.computedProps.containerHeight)},passedEdgeForInfiniteScroll:function(e){return this.computedProps.displayBottomUpwards?!this.shouldAttachToBottom&&e<this.computedProps.infiniteLoadBeginEdgeOffset:e>this.state.infiniteComputer.getTotalScrollableHeight()-this.computedProps.containerHeight-this.computedProps.infiniteLoadBeginEdgeOffset},onInfiniteLoad:function(){this.setState({isInfiniteLoading:!0}),this.computedProps.onInfiniteLoad()},handleScroll:function(e){this.shouldAttachToBottom=this.computedProps.displayBottomUpwards&&e>=this.getLowestPossibleScrollTop(),this.manageScrollTimeouts();var t=infiniteHelpers.recomputeApertureStateFromOptionsAndScrollTop(this.state,e);this.passedEdgeForInfiniteScroll(e)&&!this.state.isInfiniteLoading?(this.setState(Object.assign({},t)),this.onInfiniteLoad()):this.setState(t)},buildHeightStyle:function(e){return{width:"100%",height:Math.ceil(e)}},render:function(){var e,t=this;e=this.state.numberOfChildren>1?this.computedProps.children.slice(this.state.displayIndexStart,this.state.displayIndexEnd+1):this.computedProps.children;var i={};this.state.isScrolling&&(i.pointerEvents="none");var o=this.state.infiniteComputer.getTopSpacerHeight(this.state.displayIndexStart),n=this.state.infiniteComputer.getBottomSpacerHeight(this.state.displayIndexEnd);if(this.computedProps.displayBottomUpwards){var r=this.computedProps.containerHeight-this.state.infiniteComputer.getTotalScrollableHeight();r>0&&(o=r-this.loadingSpinnerHeight)}var s=void 0===this.computedProps.infiniteLoadBeginEdgeOffset?null:React.createElement("div",{ref:function(e){t.loadingSpinner=e}},this.state.isInfiniteLoading?this.computedProps.loadingSpinnerDelegate:null);return React.createElement("div",{className:this.computedProps.className,ref:function(e){t.scrollable=e},style:this.utils.buildScrollableStyle(),onScroll:this.utils.nodeScrollListener},React.createElement("div",{ref:function(e){t.smoothScrollingWrapper=e},style:i},React.createElement("div",{ref:function(e){t.topSpacer=e},style:this.buildHeightStyle(o)}),this.computedProps.displayBottomUpwards&&s,e,!this.computedProps.displayBottomUpwards&&s,React.createElement("div",{ref:function(e){t.bottomSpacer=e},style:this.buildHeightStyle(n)})))}});module.exports=Infinite,global.Infinite=Infinite;
+'use strict';
 
+function _objectWithoutProperties(obj, keys) { var target = {}; for (var i in obj) { if (keys.indexOf(i) >= 0) continue; if (!Object.prototype.hasOwnProperty.call(obj, i)) continue; target[i] = obj[i]; } return target; }
+
+var React = global.React || require('react');
+
+require('./utils/establish-polyfills');
+var scaleEnum = require('./utils/scaleEnum');
+var infiniteHelpers = require('./utils/infiniteHelpers');
+var _isFinite = require('lodash.isfinite');
+
+var preloadType = require('./utils/types').preloadType;
+var checkProps = checkProps = require('./utils/checkProps');
+
+var Infinite = React.createClass({
+  displayName: 'Infinite',
+
+  propTypes: {
+    children: React.PropTypes.any,
+
+    handleScroll: React.PropTypes.func,
+
+    // preloadBatchSize causes updates only to
+    // happen each preloadBatchSize pixels of scrolling.
+    // Set a larger number to cause fewer updates to the
+    // element list.
+    preloadBatchSize: preloadType,
+    // preloadAdditionalHeight determines how much of the
+    // list above and below the container is preloaded even
+    // when it is not currently visible to the user. In the
+    // regular scroll implementation, preloadAdditionalHeight
+    // is equal to the entire height of the list.
+    preloadAdditionalHeight: preloadType, // page to screen ratio
+
+    // The provided elementHeight can be either
+    //  1. a constant: all elements are the same height
+    //  2. an array containing the height of each element
+    elementHeight: React.PropTypes.oneOfType([React.PropTypes.number, React.PropTypes.arrayOf(React.PropTypes.number)]).isRequired,
+    // This is the total height of the visible window. One
+    // of
+    containerHeight: React.PropTypes.number,
+    useWindowAsScrollContainer: React.PropTypes.bool,
+
+    displayBottomUpwards: React.PropTypes.bool.isRequired,
+
+    infiniteLoadBeginEdgeOffset: React.PropTypes.number,
+    onInfiniteLoad: React.PropTypes.func,
+    loadingSpinnerDelegate: React.PropTypes.node,
+
+    isInfiniteLoading: React.PropTypes.bool,
+    timeScrollStateLastsForAfterUserScrolls: React.PropTypes.number,
+
+    className: React.PropTypes.string,
+
+    styles: React.PropTypes.shape({
+      scrollableStyle: React.PropTypes.object
+    }).isRequired
+  },
+  statics: {
+    containerHeightScaleFactor: function containerHeightScaleFactor(factor) {
+      if (!_isFinite(factor)) {
+        throw new Error('The scale factor must be a number.');
+      }
+      return {
+        type: scaleEnum.CONTAINER_HEIGHT_SCALE_FACTOR,
+        amount: factor
+      };
+    }
+  },
+
+  // Properties currently used but which may be
+  // refactored away in the future.
+  computedProps: {},
+  utils: {},
+  shouldAttachToBottom: false,
+  preservedScrollState: 0,
+  loadingSpinnerHeight: 0,
+  deprecationWarned: false,
+
+  scrollable: null,
+  topSpacer: null,
+  bottomSpacer: null,
+  smoothScrollingWrapper: null,
+  loadingSpinner: null,
+
+  getDefaultProps: function getDefaultProps() {
+    return {
+      handleScroll: function handleScroll() {},
+
+      useWindowAsScrollContainer: false,
+
+      onInfiniteLoad: function onInfiniteLoad() {},
+      loadingSpinnerDelegate: React.createElement('div', null),
+
+      displayBottomUpwards: false,
+
+      isInfiniteLoading: false,
+      timeScrollStateLastsForAfterUserScrolls: 150,
+
+      className: '',
+
+      styles: {}
+    };
+  },
+
+  // automatic adjust to scroll direction
+  // give spinner a ReactCSSTransitionGroup
+  getInitialState: function getInitialState() {
+    var nextInternalState = this.recomputeInternalStateFromProps(this.props);
+
+    this.computedProps = nextInternalState.computedProps;
+    this.utils = nextInternalState.utils;
+    this.shouldAttachToBottom = this.props.displayBottomUpwards;
+
+    var state = nextInternalState.newState;
+    state.scrollTimeout = undefined;
+    state.isScrolling = false;
+
+    return state;
+  },
+
+  generateComputedProps: function generateComputedProps(props) {
+    // These are extracted so their type definitions do not conflict.
+    var containerHeight = props.containerHeight;
+    var preloadBatchSize = props.preloadBatchSize;
+    var preloadAdditionalHeight = props.preloadAdditionalHeight;
+
+    var oldProps = _objectWithoutProperties(props, ['containerHeight', 'preloadBatchSize', 'preloadAdditionalHeight']);
+
+    var newProps = {};
+    containerHeight = typeof containerHeight === 'number' ? containerHeight : 0;
+    newProps.containerHeight = props.useWindowAsScrollContainer ? window.innerHeight : containerHeight;
+
+    if (oldProps.infiniteLoadBeginBottomOffset !== undefined) {
+      newProps.infiniteLoadBeginEdgeOffset = oldProps.infiniteLoadBeginBottomOffset;
+      if (!this.deprecationWarned) {
+        console.error('Warning: React Infinite\'s infiniteLoadBeginBottomOffset prop\n        has been deprecated as of 0.6.0. Please use infiniteLoadBeginEdgeOffset.\n        Because this is a rather descriptive name, a simple find and replace\n        should suffice.');
+        this.deprecationWarned = true;
+      }
+    }
+
+    var defaultPreloadBatchSizeScaling = {
+      type: scaleEnum.CONTAINER_HEIGHT_SCALE_FACTOR,
+      amount: 0.5
+    };
+    var batchSize = preloadBatchSize && preloadBatchSize.type ? preloadBatchSize : defaultPreloadBatchSizeScaling;
+
+    if (typeof preloadBatchSize === 'number') {
+      newProps.preloadBatchSize = preloadBatchSize;
+    } else if (typeof batchSize === 'object' && batchSize.type === scaleEnum.CONTAINER_HEIGHT_SCALE_FACTOR) {
+      newProps.preloadBatchSize = newProps.containerHeight * batchSize.amount;
+    } else {
+      newProps.preloadBatchSize = 0;
+    }
+
+    var defaultPreloadAdditionalHeightScaling = {
+      type: scaleEnum.CONTAINER_HEIGHT_SCALE_FACTOR,
+      amount: 1
+    };
+    var additionalHeight = preloadAdditionalHeight && preloadAdditionalHeight.type ? preloadAdditionalHeight : defaultPreloadAdditionalHeightScaling;
+    if (typeof preloadAdditionalHeight === 'number') {
+      newProps.preloadAdditionalHeight = preloadAdditionalHeight;
+    } else if (typeof additionalHeight === 'object' && additionalHeight.type === scaleEnum.CONTAINER_HEIGHT_SCALE_FACTOR) {
+      newProps.preloadAdditionalHeight = newProps.containerHeight * additionalHeight.amount;
+    } else {
+      newProps.preloadAdditionalHeight = 0;
+    }
+
+    return Object.assign(oldProps, newProps);
+  },
+
+  generateComputedUtilityFunctions: function generateComputedUtilityFunctions(props) {
+    var _this = this;
+
+    var utilities = {};
+    utilities.getLoadingSpinnerHeight = function () {
+      var loadingSpinnerHeight = 0;
+      if (_this.loadingSpinner) {
+        loadingSpinnerHeight = _this.loadingSpinner.offsetHeight || 0;
+      }
+      return loadingSpinnerHeight;
+    };
+    if (props.useWindowAsScrollContainer) {
+      utilities.subscribeToScrollListener = function () {
+        window.addEventListener('scroll', _this.infiniteHandleWindowScroll);
+      };
+      utilities.unsubscribeFromScrollListener = function () {
+        window.removeEventListener('scroll', _this.infiniteHandleWindowScroll);
+      };
+      utilities.nodeScrollListener = function () {};
+      utilities.lastPageYOffset = window.pageYOffset;
+      utilities.getScrollTop = function () {
+        return utilities.lastPageYOffset;
+      };
+      utilities.setScrollTop = function (top) {
+        window.scroll(window.pageXOffset, top);
+      };
+      utilities.scrollShouldBeIgnored = function () {
+        return false;
+      };
+      utilities.buildScrollableStyle = function () {
+        return {};
+      };
+    } else {
+      utilities.subscribeToScrollListener = function () {};
+      utilities.unsubscribeFromScrollListener = function () {};
+      utilities.nodeScrollListener = this.infiniteHandleScroll;
+      utilities.getScrollTop = function () {
+        return _this.scrollable ? _this.scrollable.scrollTop : 0;
+      };
+
+      utilities.setScrollTop = function (top) {
+        if (_this.scrollable) {
+          _this.scrollable.scrollTop = top;
+        }
+      };
+      utilities.scrollShouldBeIgnored = function (event) {
+        return event.target !== _this.scrollable;
+      };
+
+      utilities.buildScrollableStyle = function () {
+        return Object.assign({}, {
+          height: _this.computedProps.containerHeight,
+          overflowX: 'hidden',
+          overflowY: 'scroll',
+          WebkitOverflowScrolling: 'touch'
+        }, _this.computedProps.styles.scrollableStyle || {});
+      };
+    }
+    return utilities;
+  },
+
+  recomputeInternalStateFromProps: function recomputeInternalStateFromProps(props) {
+    checkProps(props);
+    var computedProps = this.generateComputedProps(props);
+    var utils = this.generateComputedUtilityFunctions(props);
+
+    var newState = {};
+
+    newState.numberOfChildren = React.Children.count(computedProps.children);
+    newState.infiniteComputer = infiniteHelpers.createInfiniteComputer(computedProps.elementHeight, computedProps.children, computedProps.displayBottomUpwards);
+
+    if (computedProps.isInfiniteLoading !== undefined) {
+      newState.isInfiniteLoading = computedProps.isInfiniteLoading;
+    }
+
+    newState.preloadBatchSize = computedProps.preloadBatchSize;
+    newState.preloadAdditionalHeight = computedProps.preloadAdditionalHeight;
+
+    newState = Object.assign(newState, infiniteHelpers.recomputeApertureStateFromOptionsAndScrollTop(newState, utils.getScrollTop()));
+
+    return {
+      computedProps: computedProps,
+      utils: utils,
+      newState: newState
+    };
+  },
+
+  componentWillReceiveProps: function componentWillReceiveProps(nextProps) {
+    var nextInternalState = this.recomputeInternalStateFromProps(nextProps);
+
+    this.computedProps = nextInternalState.computedProps;
+    this.utils = nextInternalState.utils;
+
+    this.setState(nextInternalState.newState);
+  },
+
+  componentWillUpdate: function componentWillUpdate() {
+    if (this.props.displayBottomUpwards) {
+      this.preservedScrollState = this.utils.getScrollTop() - this.loadingSpinnerHeight;
+    }
+  },
+
+  componentDidUpdate: function componentDidUpdate(prevProps, prevState) {
+    this.loadingSpinnerHeight = this.utils.getLoadingSpinnerHeight();
+
+    if (this.props.displayBottomUpwards) {
+      var lowestScrollTop = this.getLowestPossibleScrollTop();
+      if (this.shouldAttachToBottom && this.utils.getScrollTop() < lowestScrollTop) {
+        this.utils.setScrollTop(lowestScrollTop);
+      } else if (prevProps.isInfiniteLoading && !this.props.isInfiniteLoading) {
+        this.utils.setScrollTop(this.state.infiniteComputer.getTotalScrollableHeight() - prevState.infiniteComputer.getTotalScrollableHeight() + this.preservedScrollState);
+      }
+    }
+
+    var hasLoadedMoreChildren = this.state.numberOfChildren !== prevState.numberOfChildren;
+    if (hasLoadedMoreChildren) {
+      var newApertureState = infiniteHelpers.recomputeApertureStateFromOptionsAndScrollTop(this.state, this.utils.getScrollTop());
+      this.setState(newApertureState);
+    }
+
+    var isMissingVisibleRows = hasLoadedMoreChildren && !this.hasAllVisibleItems() && !this.state.isInfiniteLoading;
+    if (isMissingVisibleRows) {
+      this.onInfiniteLoad();
+    }
+  },
+
+  componentDidMount: function componentDidMount() {
+    this.utils.subscribeToScrollListener();
+
+    if (!this.hasAllVisibleItems()) {
+      this.onInfiniteLoad();
+    }
+
+    if (this.props.displayBottomUpwards) {
+      var lowestScrollTop = this.getLowestPossibleScrollTop();
+      if (this.shouldAttachToBottom && this.utils.getScrollTop() < lowestScrollTop) {
+        this.utils.setScrollTop(lowestScrollTop);
+      }
+    }
+  },
+
+  componentWillUnmount: function componentWillUnmount() {
+    this.utils.unsubscribeFromScrollListener();
+  },
+
+  infiniteHandleWindowScroll: function infiniteHandleWindowScroll(e) {
+    this.utils.lastPageYOffset = window.pageYOffset;
+    window.requestAnimationFrame(this.infiniteHandleScroll);
+  },
+
+  infiniteHandleScroll: function infiniteHandleScroll(e) {
+    if (this.utils.scrollShouldBeIgnored(e)) {
+      return;
+    }
+    this.computedProps.handleScroll(this.scrollable);
+    this.handleScroll(this.utils.getScrollTop());
+  },
+
+  manageScrollTimeouts: function manageScrollTimeouts() {
+    // Maintains a series of timeouts to set this.state.isScrolling
+    // to be true when the element is scrolling.
+
+    if (this.state.scrollTimeout) {
+      clearTimeout(this.state.scrollTimeout);
+    }
+
+    var that = this,
+        scrollTimeout = setTimeout(function () {
+      that.setState({
+        isScrolling: false,
+        scrollTimeout: undefined
+      });
+    }, this.computedProps.timeScrollStateLastsForAfterUserScrolls);
+
+    this.setState({
+      isScrolling: true,
+      scrollTimeout: scrollTimeout
+    });
+  },
+
+  getLowestPossibleScrollTop: function getLowestPossibleScrollTop() {
+    return this.state.infiniteComputer.getTotalScrollableHeight() - this.computedProps.containerHeight;
+  },
+
+  hasAllVisibleItems: function hasAllVisibleItems() {
+    return !(_isFinite(this.computedProps.infiniteLoadBeginEdgeOffset) && this.state.infiniteComputer.getTotalScrollableHeight() < this.computedProps.containerHeight);
+  },
+
+  passedEdgeForInfiniteScroll: function passedEdgeForInfiniteScroll(scrollTop) {
+    if (this.computedProps.displayBottomUpwards) {
+      return !this.shouldAttachToBottom && scrollTop < this.computedProps.infiniteLoadBeginEdgeOffset;
+    } else {
+      return scrollTop > this.state.infiniteComputer.getTotalScrollableHeight() - this.computedProps.containerHeight - this.computedProps.infiniteLoadBeginEdgeOffset;
+    }
+  },
+
+  onInfiniteLoad: function onInfiniteLoad() {
+    this.setState({ isInfiniteLoading: true });
+    this.computedProps.onInfiniteLoad();
+  },
+
+  handleScroll: function handleScroll(scrollTop) {
+    this.shouldAttachToBottom = this.computedProps.displayBottomUpwards && scrollTop >= this.getLowestPossibleScrollTop();
+
+    this.manageScrollTimeouts();
+
+    var newApertureState = infiniteHelpers.recomputeApertureStateFromOptionsAndScrollTop(this.state, scrollTop);
+
+    if (this.passedEdgeForInfiniteScroll(scrollTop) && !this.state.isInfiniteLoading) {
+      this.setState(Object.assign({}, newApertureState));
+      this.onInfiniteLoad();
+    } else {
+      this.setState(newApertureState);
+    }
+  },
+
+  buildHeightStyle: function buildHeightStyle(height) {
+    return {
+      width: '100%',
+      height: Math.ceil(height)
+    };
+  },
+
+  render: function render() {
+    var _this2 = this;
+
+    var displayables;
+    if (this.state.numberOfChildren > 1) {
+      displayables = this.computedProps.children.slice(this.state.displayIndexStart, this.state.displayIndexEnd + 1);
+    } else {
+      displayables = this.computedProps.children;
+    }
+
+    var infiniteScrollStyles = {};
+    if (this.state.isScrolling) {
+      infiniteScrollStyles.pointerEvents = 'none';
+    }
+
+    var topSpacerHeight = this.state.infiniteComputer.getTopSpacerHeight(this.state.displayIndexStart),
+        bottomSpacerHeight = this.state.infiniteComputer.getBottomSpacerHeight(this.state.displayIndexEnd);
+
+    // This asymmetry is due to a reluctance to use CSS to control
+    // the bottom alignment
+    if (this.computedProps.displayBottomUpwards) {
+      var heightDifference = this.computedProps.containerHeight - this.state.infiniteComputer.getTotalScrollableHeight();
+      if (heightDifference > 0) {
+        topSpacerHeight = heightDifference - this.loadingSpinnerHeight;
+      }
+    }
+
+    var loadingSpinner = this.computedProps.infiniteLoadBeginEdgeOffset === undefined ? null : React.createElement(
+      'div',
+      { ref: function (c) {
+          _this2.loadingSpinner = c;
+        } },
+      this.state.isInfiniteLoading ? this.computedProps.loadingSpinnerDelegate : null
+    );
+
+    // topSpacer and bottomSpacer take up the amount of space that the
+    // rendered elements would have taken up otherwise
+    return React.createElement(
+      'div',
+      { className: this.computedProps.className,
+        ref: function (c) {
+          _this2.scrollable = c;
+        },
+        style: this.utils.buildScrollableStyle(),
+        onScroll: this.utils.nodeScrollListener },
+      React.createElement(
+        'div',
+        { ref: function (c) {
+            _this2.smoothScrollingWrapper = c;
+          }, style: infiniteScrollStyles },
+        React.createElement('div', { ref: function (c) {
+            _this2.topSpacer = c;
+          },
+          style: this.buildHeightStyle(topSpacerHeight) }),
+        this.computedProps.displayBottomUpwards && loadingSpinner,
+        displayables,
+        !this.computedProps.displayBottomUpwards && loadingSpinner,
+        React.createElement('div', { ref: function (c) {
+            _this2.bottomSpacer = c;
+          },
+          style: this.buildHeightStyle(bottomSpacerHeight) })
+      )
+    );
+  }
+});
+
+module.exports = Infinite;
+global.Infinite = Infinite;
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{"./utils/checkProps":9,"./utils/establish-polyfills":10,"./utils/infiniteHelpers":11,"./utils/scaleEnum":12,"./utils/types":13,"lodash.isfinite":3,"react":undefined}],2:[function(require,module,exports){
@@ -276,46 +736,382 @@ module.exports = Object.assign || function (target, source) {
 };
 
 },{}],5:[function(require,module,exports){
-"use strict";function _classCallCheck(e,t){if(!(e instanceof t))throw new TypeError("Cannot call a class as a function")}function _inherits(e,t){if("function"!=typeof t&&null!==t)throw new TypeError("Super expression must either be null or a function, not "+typeof t);e.prototype=Object.create(t&&t.prototype,{constructor:{value:e,enumerable:!1,writable:!0,configurable:!0}}),t&&(Object.setPrototypeOf?Object.setPrototypeOf(e,t):e.__proto__=t)}var _createClass=function(){function e(e,t){for(var r=0;r<t.length;r++){var n=t[r];n.enumerable=n.enumerable||!1,n.configurable=!0,"value"in n&&(n.writable=!0),Object.defineProperty(e,n.key,n)}}return function(t,r,n){return r&&e(t.prototype,r),n&&e(t,n),t}}(),_get=function(e,t,r){for(var n=!0;n;){var i=e,a=t,o=r;n=!1,null===i&&(i=Function.prototype);var u=Object.getOwnPropertyDescriptor(i,a);if(void 0!==u){if("value"in u)return u.value;var l=u.get;if(void 0===l)return;return l.call(o)}var c=Object.getPrototypeOf(i);if(null===c)return;e=c,t=a,r=o,n=!0,u=c=void 0}},InfiniteComputer=require("./infiniteComputer.js"),bs=require("../utils/binaryIndexSearch.js"),ArrayInfiniteComputer=function(e){function t(e,r){_classCallCheck(this,t),_get(Object.getPrototypeOf(t.prototype),"constructor",this).call(this,e,r),this.prefixHeightData=this.heightData.reduce(function(e,t){return 0===e.length?[t]:(e.push(e[e.length-1]+t),e)},[])}return _inherits(t,e),_createClass(t,[{key:"maybeIndexToIndex",value:function(e){return"undefined"==typeof e||null===e?this.prefixHeightData.length-1:e}},{key:"getTotalScrollableHeight",value:function(){var e=this.prefixHeightData.length;return 0===e?0:this.prefixHeightData[e-1]}},{key:"getDisplayIndexStart",value:function(e){var t=bs.binaryIndexSearch(this.prefixHeightData,e,bs.opts.CLOSEST_HIGHER);return this.maybeIndexToIndex(t)}},{key:"getDisplayIndexEnd",value:function(e){var t=bs.binaryIndexSearch(this.prefixHeightData,e,bs.opts.CLOSEST_HIGHER);return this.maybeIndexToIndex(t)}},{key:"getTopSpacerHeight",value:function(e){var t=e-1;return t<0?0:this.prefixHeightData[t]}},{key:"getBottomSpacerHeight",value:function(e){return e===-1?0:this.getTotalScrollableHeight()-this.prefixHeightData[e]}}]),t}(InfiniteComputer);module.exports=ArrayInfiniteComputer;
+'use strict';
 
+var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+
+var _get = function get(_x, _x2, _x3) { var _again = true; _function: while (_again) { var object = _x, property = _x2, receiver = _x3; _again = false; if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { _x = parent; _x2 = property; _x3 = receiver; _again = true; desc = parent = undefined; continue _function; } } else if ('value' in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } } };
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var InfiniteComputer = require('./infiniteComputer.js'),
+    bs = require('../utils/binaryIndexSearch.js');
+
+var ArrayInfiniteComputer = (function (_InfiniteComputer) {
+  _inherits(ArrayInfiniteComputer, _InfiniteComputer);
+
+  function ArrayInfiniteComputer(heightData, numberOfChildren) {
+    _classCallCheck(this, ArrayInfiniteComputer);
+
+    _get(Object.getPrototypeOf(ArrayInfiniteComputer.prototype), 'constructor', this).call(this, heightData, numberOfChildren);
+    this.prefixHeightData = this.heightData.reduce(function (acc, next) {
+      if (acc.length === 0) {
+        return [next];
+      } else {
+        acc.push(acc[acc.length - 1] + next);
+        return acc;
+      }
+    }, []);
+  }
+
+  _createClass(ArrayInfiniteComputer, [{
+    key: 'maybeIndexToIndex',
+    value: function maybeIndexToIndex(index) {
+      if (typeof index === 'undefined' || index === null) {
+        return this.prefixHeightData.length - 1;
+      } else {
+        return index;
+      }
+    }
+  }, {
+    key: 'getTotalScrollableHeight',
+    value: function getTotalScrollableHeight() {
+      var length = this.prefixHeightData.length;
+      return length === 0 ? 0 : this.prefixHeightData[length - 1];
+    }
+  }, {
+    key: 'getDisplayIndexStart',
+    value: function getDisplayIndexStart(windowTop) {
+      var foundIndex = bs.binaryIndexSearch(this.prefixHeightData, windowTop, bs.opts.CLOSEST_HIGHER);
+      return this.maybeIndexToIndex(foundIndex);
+    }
+  }, {
+    key: 'getDisplayIndexEnd',
+    value: function getDisplayIndexEnd(windowBottom) {
+      var foundIndex = bs.binaryIndexSearch(this.prefixHeightData, windowBottom, bs.opts.CLOSEST_HIGHER);
+      return this.maybeIndexToIndex(foundIndex);
+    }
+  }, {
+    key: 'getTopSpacerHeight',
+    value: function getTopSpacerHeight(displayIndexStart) {
+      var previous = displayIndexStart - 1;
+      return previous < 0 ? 0 : this.prefixHeightData[previous];
+    }
+  }, {
+    key: 'getBottomSpacerHeight',
+    value: function getBottomSpacerHeight(displayIndexEnd) {
+      if (displayIndexEnd === -1) {
+        return 0;
+      }
+      return this.getTotalScrollableHeight() - this.prefixHeightData[displayIndexEnd];
+    }
+  }]);
+
+  return ArrayInfiniteComputer;
+})(InfiniteComputer);
+
+module.exports = ArrayInfiniteComputer;
 
 },{"../utils/binaryIndexSearch.js":8,"./infiniteComputer.js":7}],6:[function(require,module,exports){
-"use strict";function _classCallCheck(t,e){if(!(t instanceof e))throw new TypeError("Cannot call a class as a function")}function _inherits(t,e){if("function"!=typeof e&&null!==e)throw new TypeError("Super expression must either be null or a function, not "+typeof e);t.prototype=Object.create(e&&e.prototype,{constructor:{value:t,enumerable:!1,writable:!0,configurable:!0}}),e&&(Object.setPrototypeOf?Object.setPrototypeOf(t,e):t.__proto__=e)}var _createClass=function(){function t(t,e){for(var r=0;r<e.length;r++){var n=e[r];n.enumerable=n.enumerable||!1,n.configurable=!0,"value"in n&&(n.writable=!0),Object.defineProperty(t,n.key,n)}}return function(e,r,n){return r&&t(e.prototype,r),n&&t(e,n),e}}(),_get=function(t,e,r){for(var n=!0;n;){var o=t,i=e,a=r;n=!1,null===o&&(o=Function.prototype);var u=Object.getOwnPropertyDescriptor(o,i);if(void 0!==u){if("value"in u)return u.value;var l=u.get;if(void 0===l)return;return l.call(a)}var c=Object.getPrototypeOf(o);if(null===c)return;t=c,e=i,r=a,n=!0,u=c=void 0}},InfiniteComputer=require("./infiniteComputer.js"),ConstantInfiniteComputer=function(t){function e(){_classCallCheck(this,e),_get(Object.getPrototypeOf(e.prototype),"constructor",this).apply(this,arguments)}return _inherits(e,t),_createClass(e,[{key:"getTotalScrollableHeight",value:function(){return this.heightData*this.numberOfChildren}},{key:"getDisplayIndexStart",value:function(t){return Math.floor(t/this.heightData)}},{key:"getDisplayIndexEnd",value:function(t){var e=Math.ceil(t/this.heightData);return e>0?e-1:e}},{key:"getTopSpacerHeight",value:function(t){return t*this.heightData}},{key:"getBottomSpacerHeight",value:function(t){var e=t+1;return Math.max(0,(this.numberOfChildren-e)*this.heightData)}}]),e}(InfiniteComputer);module.exports=ConstantInfiniteComputer;
+'use strict';
 
+var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+
+var _get = function get(_x, _x2, _x3) { var _again = true; _function: while (_again) { var object = _x, property = _x2, receiver = _x3; _again = false; if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { _x = parent; _x2 = property; _x3 = receiver; _again = true; desc = parent = undefined; continue _function; } } else if ('value' in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } } };
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var InfiniteComputer = require('./infiniteComputer.js');
+
+var ConstantInfiniteComputer = (function (_InfiniteComputer) {
+  _inherits(ConstantInfiniteComputer, _InfiniteComputer);
+
+  function ConstantInfiniteComputer() {
+    _classCallCheck(this, ConstantInfiniteComputer);
+
+    _get(Object.getPrototypeOf(ConstantInfiniteComputer.prototype), 'constructor', this).apply(this, arguments);
+  }
+
+  _createClass(ConstantInfiniteComputer, [{
+    key: 'getTotalScrollableHeight',
+    value: function getTotalScrollableHeight() {
+      return this.heightData * this.numberOfChildren;
+    }
+  }, {
+    key: 'getDisplayIndexStart',
+    value: function getDisplayIndexStart(windowTop) {
+      return Math.floor(windowTop / this.heightData);
+    }
+  }, {
+    key: 'getDisplayIndexEnd',
+    value: function getDisplayIndexEnd(windowBottom) {
+      var nonZeroIndex = Math.ceil(windowBottom / this.heightData);
+      if (nonZeroIndex > 0) {
+        return nonZeroIndex - 1;
+      }
+      return nonZeroIndex;
+    }
+  }, {
+    key: 'getTopSpacerHeight',
+    value: function getTopSpacerHeight(displayIndexStart) {
+      return displayIndexStart * this.heightData;
+    }
+  }, {
+    key: 'getBottomSpacerHeight',
+    value: function getBottomSpacerHeight(displayIndexEnd) {
+      var nonZeroIndex = displayIndexEnd + 1;
+      return Math.max(0, (this.numberOfChildren - nonZeroIndex) * this.heightData);
+    }
+  }]);
+
+  return ConstantInfiniteComputer;
+})(InfiniteComputer);
+
+module.exports = ConstantInfiniteComputer;
 
 },{"./infiniteComputer.js":7}],7:[function(require,module,exports){
-"use strict";function _classCallCheck(e,t){if(!(e instanceof t))throw new TypeError("Cannot call a class as a function")}var _createClass=function(){function e(e,t){for(var n=0;n<t.length;n++){var a=t[n];a.enumerable=a.enumerable||!1,a.configurable=!0,"value"in a&&(a.writable=!0),Object.defineProperty(e,a.key,a)}}return function(t,n,a){return n&&e(t.prototype,n),a&&e(t,a),t}}(),InfiniteComputer=function(){function e(t,n){_classCallCheck(this,e),this.heightData=t,this.numberOfChildren=n}return _createClass(e,[{key:"getTotalScrollableHeight",value:function(){}},{key:"getDisplayIndexStart",value:function(e){}},{key:"getDisplayIndexEnd",value:function(e){}},{key:"getTopSpacerHeight",value:function(e){}},{key:"getBottomSpacerHeight",value:function(e){}}]),e}();module.exports=InfiniteComputer;
+// An infinite computer must be able to do the following things:
+//  1. getTotalScrollableHeight()
+//  2. getDisplayIndexStart()
+//  3. getDisplayIndexEnd()
 
+'use strict';
+
+var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
+
+var InfiniteComputer = (function () {
+  function InfiniteComputer(heightData, numberOfChildren) {
+    _classCallCheck(this, InfiniteComputer);
+
+    this.heightData = heightData;
+    this.numberOfChildren = numberOfChildren;
+  }
+
+  _createClass(InfiniteComputer, [{
+    key: 'getTotalScrollableHeight',
+    value: function getTotalScrollableHeight() {
+      if ("development" === 'development') {
+        throw new Error('getTotalScrollableHeight not implemented.');
+      }
+    }
+
+    /* eslint-disable no-unused-vars */
+  }, {
+    key: 'getDisplayIndexStart',
+    value: function getDisplayIndexStart(windowTop) {
+      /* eslint-enable no-unused-vars */
+      if ("development" === 'development') {
+        throw new Error('getDisplayIndexStart not implemented.');
+      }
+    }
+
+    /* eslint-disable no-unused-vars */
+  }, {
+    key: 'getDisplayIndexEnd',
+    value: function getDisplayIndexEnd(windowBottom) {
+      /* eslint-enable no-unused-vars */
+      if ("development" === 'development') {
+        throw new Error('getDisplayIndexEnd not implemented.');
+      }
+    }
+
+    // These are helper methods, and can be calculated from
+    // the above details.
+    /* eslint-disable no-unused-vars */
+  }, {
+    key: 'getTopSpacerHeight',
+    value: function getTopSpacerHeight(displayIndexStart) {
+      /* eslint-enable no-unused-vars */
+      if ("development" === 'development') {
+        throw new Error('getTopSpacerHeight not implemented.');
+      }
+    }
+
+    /* eslint-disable no-unused-vars */
+  }, {
+    key: 'getBottomSpacerHeight',
+    value: function getBottomSpacerHeight(displayIndexEnd) {
+      /* eslint-enable no-unused-vars */
+      if ("development" === 'development') {
+        throw new Error('getBottomSpacerHeight not implemented.');
+      }
+    }
+  }]);
+
+  return InfiniteComputer;
+})();
+
+module.exports = InfiniteComputer;
 
 },{}],8:[function(require,module,exports){
-"use strict";var opts={CLOSEST_LOWER:1,CLOSEST_HIGHER:2},binaryIndexSearch=function(r,t,e){for(var n,o,S,a=r.length-1,s=0;s<=a;){if(o=s+Math.floor((a-s)/2),S=r[o],S===t)return o;S<t?s=o+1:S>t&&(a=o-1)}return e===opts.CLOSEST_LOWER&&s>0?n=s-1:e===opts.CLOSEST_HIGHER&&a<r.length-1&&(n=a+1),n};module.exports={binaryIndexSearch:binaryIndexSearch,opts:opts};
+"use strict";
 
+var opts = {
+  CLOSEST_LOWER: 1,
+  CLOSEST_HIGHER: 2
+};
+
+var binaryIndexSearch = function binaryIndexSearch(array, /* : Array<number> */
+item, /* : number */
+opt /* : number */) /* : ?number */{
+  var index;
+
+  var high = array.length - 1,
+      low = 0,
+      middle,
+      middleItem;
+
+  while (low <= high) {
+    middle = low + Math.floor((high - low) / 2);
+    middleItem = array[middle];
+
+    if (middleItem === item) {
+      return middle;
+    } else if (middleItem < item) {
+      low = middle + 1;
+    } else if (middleItem > item) {
+      high = middle - 1;
+    }
+  }
+
+  if (opt === opts.CLOSEST_LOWER && low > 0) {
+    index = low - 1;
+  } else if (opt === opts.CLOSEST_HIGHER && high < array.length - 1) {
+    index = high + 1;
+  }
+
+  return index;
+};
+
+module.exports = {
+  binaryIndexSearch: binaryIndexSearch,
+  opts: opts
+};
 
 },{}],9:[function(require,module,exports){
 (function (global){
-"use strict";var React=global.React||require("react"),_isFinite=require("lodash.isfinite");module.exports=function(e){var r="Invariant Violation: ";if(!e.containerHeight&&!e.useWindowAsScrollContainer)throw new Error(r+"Either containerHeight or useWindowAsScrollContainer must be provided.");if(!_isFinite(e.elementHeight)&&!Array.isArray(e.elementHeight))throw new Error(r+"You must provide either a number or an array of numbers as the elementHeight.");if(Array.isArray(e.elementHeight)&&React.Children.count(e.children)!==e.elementHeight.length)throw new Error(r+"There must be as many values provided in the elementHeight prop as there are children.")};
+// This module provides a centralized place for
+// runtime checking that the props passed to React Infinite
+// make the minimum amount of sense.
 
+'use strict';
+
+var React = global.React || require('react');
+var _isFinite = require('lodash.isfinite');
+
+module.exports = function (props) {
+  var rie = 'Invariant Violation: ';
+  if (!(props.containerHeight || props.useWindowAsScrollContainer)) {
+    throw new Error(rie + 'Either containerHeight or useWindowAsScrollContainer must be provided.');
+  }
+
+  if (!(_isFinite(props.elementHeight) || Array.isArray(props.elementHeight))) {
+    throw new Error(rie + 'You must provide either a number or an array of numbers as the elementHeight.');
+  }
+
+  if (Array.isArray(props.elementHeight)) {
+    if (React.Children.count(props.children) !== props.elementHeight.length) {
+      throw new Error(rie + 'There must be as many values provided in the elementHeight prop as there are children.');
+    }
+  }
+};
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{"lodash.isfinite":3,"react":undefined}],10:[function(require,module,exports){
-"use strict";Object.assign||(Object.assign=require("object-assign")),Array.isArray||(Array.isArray=require("lodash.isarray"));
+/*
+  A number of polyfills for native functions are consolidated
+  here. We do this instead of using the libraries directly
+  because Flow is designed to make its type refinements
+  with these native functions.
+ */
 
+'use strict';
+
+if (!Object.assign) {
+  Object.assign = require('object-assign');
+}
+
+if (!Array.isArray) {
+  Array.isArray = require('lodash.isarray');
+}
 
 },{"lodash.isarray":2,"object-assign":4}],11:[function(require,module,exports){
 (function (global){
-"use strict";function createInfiniteComputer(e,t){var r,n=React.Children.count(t);return r=Array.isArray(e)?new ArrayInfiniteComputer(e,n):new ConstantInfiniteComputer(e,n)}function recomputeApertureStateFromOptionsAndScrollTop(e,t){var r=e.preloadBatchSize,n=e.preloadAdditionalHeight,o=e.infiniteComputer;return function(){var e=0===r?0:Math.floor(t/r),i=r*e,a=i+r,p=Math.max(0,i-n),u=Math.min(o.getTotalScrollableHeight(),a+n);return{displayIndexStart:o.getDisplayIndexStart(p),displayIndexEnd:o.getDisplayIndexEnd(u)}}()}var ConstantInfiniteComputer=require("../computers/constantInfiniteComputer.js"),ArrayInfiniteComputer=require("../computers/arrayInfiniteComputer.js"),React=global.React||require("react");module.exports={createInfiniteComputer:createInfiniteComputer,recomputeApertureStateFromOptionsAndScrollTop:recomputeApertureStateFromOptionsAndScrollTop};
+'use strict';
 
+var ConstantInfiniteComputer = require('../computers/constantInfiniteComputer.js');
+var ArrayInfiniteComputer = require('../computers/arrayInfiniteComputer.js');
+var React = global.React || require('react');
+
+function createInfiniteComputer(data, children) {
+  var computer;
+  var numberOfChildren = React.Children.count(children);
+
+  // This should be guaranteed by checkProps
+  if (Array.isArray(data)) {
+    computer = new ArrayInfiniteComputer(data, numberOfChildren);
+  } else {
+    computer = new ConstantInfiniteComputer(data, numberOfChildren);
+  }
+  return computer;
+}
+
+// Given the scrollTop of the container, computes the state the
+// component should be in. The goal is to abstract all of this
+// from any actual representation in the DOM.
+// The window is the block with any preloadAdditionalHeight
+// added to it.
+function recomputeApertureStateFromOptionsAndScrollTop(_ref, scrollTop) {
+  var preloadBatchSize = _ref.preloadBatchSize;
+  var preloadAdditionalHeight = _ref.preloadAdditionalHeight;
+  var infiniteComputer = _ref.infiniteComputer;
+  return (function () {
+    var blockNumber = preloadBatchSize === 0 ? 0 : Math.floor(scrollTop / preloadBatchSize),
+        blockStart = preloadBatchSize * blockNumber,
+        blockEnd = blockStart + preloadBatchSize,
+        apertureTop = Math.max(0, blockStart - preloadAdditionalHeight),
+        apertureBottom = Math.min(infiniteComputer.getTotalScrollableHeight(), blockEnd + preloadAdditionalHeight);
+
+    return {
+      displayIndexStart: infiniteComputer.getDisplayIndexStart(apertureTop),
+      displayIndexEnd: infiniteComputer.getDisplayIndexEnd(apertureBottom)
+    };
+  })();
+}
+
+module.exports = {
+  createInfiniteComputer: createInfiniteComputer,
+  recomputeApertureStateFromOptionsAndScrollTop: recomputeApertureStateFromOptionsAndScrollTop
+};
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{"../computers/arrayInfiniteComputer.js":5,"../computers/constantInfiniteComputer.js":6,"react":undefined}],12:[function(require,module,exports){
-"use strict";module.exports={CONTAINER_HEIGHT_SCALE_FACTOR:"containerHeightScaleFactor"};
+'use strict';
 
+module.exports = {
+  CONTAINER_HEIGHT_SCALE_FACTOR: 'containerHeightScaleFactor'
+};
 
 },{}],13:[function(require,module,exports){
 (function (global){
-"use strict";var React=global.React||require("react");module.exports={preloadType:React.PropTypes.oneOfType([React.PropTypes.number,React.PropTypes.shape({type:React.PropTypes.oneOf(["containerHeightScaleFactor"]).isRequired,amount:React.PropTypes.number.isRequired})])};
+'use strict';
 
+var React = global.React || require('react');
+
+module.exports = {
+  preloadType: React.PropTypes.oneOfType([React.PropTypes.number, React.PropTypes.shape({
+    type: React.PropTypes.oneOf(['containerHeightScaleFactor']).isRequired,
+    amount: React.PropTypes.number.isRequired
+  })])
+};
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{"react":undefined}]},{},[1])(1)
 });
+//# sourceMappingURL=react-infinite.js.map

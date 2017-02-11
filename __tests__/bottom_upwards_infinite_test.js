@@ -174,6 +174,7 @@ describe('The Bottom Scroll Preserving Behavior of the Bottom Upwards Display', 
 
 describe('The Infinite Loading Triggering Behavior of the Bottom Upwards Display', function() {
   it('triggers when the user passes the required point when scrolling upwards', function() {
+    window.requestAnimationFrame = fn => fn();
     var infiniteLoader = jest.genMockFunction();
     var rootNode = TestUtils.renderIntoDocument(
       <Infinite elementHeight={100}

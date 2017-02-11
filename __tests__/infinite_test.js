@@ -635,6 +635,7 @@ describe('Handling infinite scrolling', function() {
 });
 
 describe('React Infinite when the window is used as the Container', function() {
+  window.requestAnimationFrame = fn => fn();
   var elementHeight = 200;
   it('does not attach a scrollable style', function() {
     var rootNode = TestUtils.renderIntoDocument(
